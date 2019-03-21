@@ -1,1 +1,1 @@
-# Snake
+# JavaScript HTML Games

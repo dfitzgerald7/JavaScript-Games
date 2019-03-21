@@ -20,9 +20,16 @@
 
         const width = gameCanvas.width, height = gameCanvas.height, radius = 7
         let x = gameCanvas.width/2, y = (gameCanvas.height - radius), dx=10, dy=-10
+        let duringLevel = false
         let blockArray = [];
         for (let i=0; i < 10; i++){
           blockArray.push([0, 0, 0, 0, 0, 0, 0, 0])
+        }
+
+        const refreshXandY = () => {
+          x = width/2
+          y = (height - radius)
+          duringLevel = false
         }
 
         const newBlocks = () => { //create 2d array to track blocks
@@ -30,14 +37,19 @@
           blockArray.pop()
         }
 
+        //draws the entire block array by looping through. O(n2)
         const drawBlocks = () => {
-          blockArray[0].forEach((block, index)=> {
+          blockArray.forEach((blockRow, vertical) => {
+            blockRow.forEach((block, horizontal) => {
             if (block === 1) {
-              context.fillRect(width/8*index, height/10, width/8, height/10)
-              context.strokeRect(width/8*index, height/10, width/8, height/10)
+              context.fillRect(width/8*horizontal, height/10*(vertical + 1), width/8, height/10)
+              context.strokeRect(width/8*horizontal, height/10*(vertical + 1), width/8, height/10)
             }
+            })
           })
         }
+
+
 
         const drawInitialBoard = () => {
           context.fillStyle = CANVAS_BACKGROUND_COLOR; context.strokestyle = CANVAS_BORDER_COLOR;
@@ -50,10 +62,6 @@
         }
 
         const moveBall = () => {
-          // if (y > height - radius){
-          //   endLoop()
-          //   return
-          // }
           if (x < radius || x > width - radius) { dx = -dx } //collision logic
           if (y < radius || y > height - radius) { dy = -dy }
           for (let i = 0; i<10; i++){ // yikes on this nested for loop. need to rework
@@ -61,10 +69,20 @@
               if (blockArray[i][j] === 1){
                 const blockX = width/8*j; const blockY = height/10*(i+1)
                 const roundX = Math.round(x); roundY = Math.round(y)
-                console.log("x", blockX, "y", blockY)
                 if ((blockX <= x && x <= blockX + width/8) && (blockY <= y && y <= blockY + height/10)){
-                  dy = -dy
+                  blockArray[i][j] = 0 // delete block that is detected as hit
+                  console.log(roundX, roundY, blockX, blockX+width/8, blockY, blockY + height/10)
+                  if (roundX === blockX || roundX === blockX + width/8) {
+                    dx = -dx //change direction
+                  } else {
+                    dy = -dy
                   }
+                }
+                // if ((blockX <= x && x <= blockX + width/8) && (blockY <= y && y <= blockY + height/10)){
+                //   blockArray[i][j] = 0 // delete block that is detected as hit
+                //   console.log(roundX, roundY, blockX, blockX+width/8, blockY, blockY + height/10)
+                //   dy = -dy //change direction
+                // }
                 }
               }
             }
@@ -76,44 +94,60 @@
           context.closePath()
           context.fill()
           drawBlocks()
+          main()
+        }
+
+        const nextLevel = () => {
+          refreshXandY()
+          newBlocks()
+        }
+
+        const playLevel = () => {
+          console.log("play")
+          if (y > height - radius){ //only way to end a level
+            nextLevel()
+            return
+          }
+          moveBall()
         }
 
         const buildUnitVector = (x0, y0, x1, y1) => { //todo
-          let netX = Math.abs(x0 - x1); let netY = Math.abs(height -  (y1 - y0))
+          let netX = x1 - x0; let netY = y1 - y0
           let magnitude = Math.sqrt( Math.pow(netX, 2) + Math.pow(netY, 2))
-          return {unitX: netX/magnitude, unitY: netX/magnitude, mag: magnitude}
+          return {unitX: netX/magnitude, unitY: netY/magnitude, mag: magnitude}
         }
 
         const handleMouseMove = event => {
-          const {clientX, clientY} = event
-          // const {unitX, unitY, mag} = buildUnitVector(x, y, clientX, clientY)
-          // const myMag = mag/100
-          context.clearRect(0, 0, width, height); drawInitialBoard()//maintain the initail board set up
-          context.beginPath()
-          context.moveTo(x, y)
-          context.lineTo(clientX, clientY)
-          context.stroke()
-          context.closePath()
+          if (!duringLevel) {
+            const {clientX, clientY} = event
+            context.clearRect(0, 0, width, height); drawInitialBoard()//maintain the initial board set up
+            context.beginPath()
+            context.moveTo(x, y)
+            context.lineTo(clientX, clientY)
+            context.stroke()
+            context.closePath()
+          }
         }
 
         const handleMouseClick = event => {
-          const {clientX, clientY} = event
-          dx = (clientX - x)/100; dy = (clientY - y)/100 ;
-          main()
+          if (!duringLevel) {
+            const {clientX, clientY} = event
+            const {unitX, unitY} = buildUnitVector(x, y, clientX, clientY)
+            dx = unitX * 1.5; dy = unitY * 1.5;
+            main()
+          }
         }
 
         const main = () => {
-          setInterval(moveBall, 1000)
-          console.log("next level")
-          main()
+          duringLevel = true
+          setTimeout(playLevel, 1)
         }
-
 
         gameCanvas.addEventListener("mousemove", handleMouseMove)
         gameCanvas.addEventListener("click", handleMouseClick)
         newBlocks()
         drawInitialBoard()
-        //main()
+
       </script>
   </body>
 </html>
