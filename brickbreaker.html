@@ -62,17 +62,23 @@
         }
 
         const moveBall = () => {
+          if (y > height - radius){ //only way to end a level
+            nextLevel()
+            return
+          }
           if (x < radius || x > width - radius) { dx = -dx } //collision logic
           if (y < radius || y > height - radius) { dy = -dy }
           for (let i = 0; i<10; i++){ // yikes on this nested for loop. need to rework
             for (let j = 0; j<8; j++){
               if (blockArray[i][j] === 1){
-                const blockX = width/8*j; const blockY = height/10*(i+1)
+                const blockXLeft = width/8*j; const blockYTop = height/10*(i+1)
+                const blockXRight = width/8*j + width/8 ; const blockYBottom = height/10*(i+1) + height/10
                 const roundX = Math.round(x); roundY = Math.round(y)
-                if ((blockX <= x && x <= blockX + width/8) && (blockY <= y && y <= blockY + height/10)){
+                if ((blockXLeft <= x && x <= blockXRight) && (blockYTop <= y && y <= blockYBottom)){
                   blockArray[i][j] = 0 // delete block that is detected as hit
-                  console.log(roundX, roundY, blockX, blockX+width/8, blockY, blockY + height/10)
-                  if (roundX === blockX || roundX === blockX + width/8) {
+
+                  //determine if a horizonal or vertical collision
+                  if (Math.abs(roundX - blockXLeft) < 5 || Math.abs(roundX - blockXRight) < 5) {
                     dx = -dx //change direction
                   } else {
                     dy = -dy
@@ -100,15 +106,6 @@
         const nextLevel = () => {
           refreshXandY()
           newBlocks()
-        }
-
-        const playLevel = () => {
-          console.log("play")
-          if (y > height - radius){ //only way to end a level
-            nextLevel()
-            return
-          }
-          moveBall()
         }
 
         const buildUnitVector = (x0, y0, x1, y1) => { //todo
@@ -140,7 +137,7 @@
 
         const main = () => {
           duringLevel = true
-          setTimeout(playLevel, 1)
+          setTimeout(moveBall, 1)
         }
 
         gameCanvas.addEventListener("mousemove", handleMouseMove)
