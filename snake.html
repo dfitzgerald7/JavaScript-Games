@@ -1,12 +1,21 @@
-<<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en" dir="ltr">
   <head>
     <meta charset="utf-8">
     <title> Snake </title>
   </head>
+  <style>
+    #gameOver {
+      display: none
+    }
+  </style>
   <body>
-    Welcome to Snake
+    <h1> Snake </h1>
     <canvas id="gameCanvas" height="300px" width="300" > </canvas>
+    <div id="gameOver" >
+      <h2> Game Over </h2>
+      <button onclick="refreshGame()"> Play Again </button>
+    </div>
     <script type="text/javascript">
         const gameCanvas = document.getElementById("gameCanvas") //game canvas
         const ctx = gameCanvas.getContext("2d"); //2d drawing template
@@ -24,15 +33,18 @@
         // Draw a "border" around the entire canvas
         ctx.strokeRect(0, 0, gameCanvas.width, gameCanvas.height);
 
-        let snake = [
-          {x: (gameCanvas.width)/2, y: gameCanvas.height/2},
-          {x: (gameCanvas.width - 20)/2, y: gameCanvas.height/2},
-          {x: (gameCanvas.width - 40)/2, y: gameCanvas.height/2},
-          {x: (gameCanvas.width - 60)/2, y: gameCanvas.height/2},
-          {x: (gameCanvas.width - 80)/2, y: gameCanvas.height/2}
-        ]
+        let snake = [];
 
-        let dx = 10, dy = 0; foodX = 0; foodY = 0;//declare movement variables
+        const initializeSnake = () => {
+          snake = [
+            {x: (gameCanvas.width)/2, y: gameCanvas.height/2},
+            {x: (gameCanvas.width - 20)/2, y: gameCanvas.height/2},
+            {x: (gameCanvas.width - 40)/2, y: gameCanvas.height/2},
+            {x: (gameCanvas.width - 60)/2, y: gameCanvas.height/2},
+            {x: (gameCanvas.width - 80)/2, y: gameCanvas.height/2}
+          ]
+        }
+        let dx = 10, dy = 0; foodX = 0; foodY = 0; buttonClicked = false//declare movement variables
 
         const drawSnakePart = snakePart => {
           ctx.fillStyle = SNAKE_COLOR;
@@ -102,39 +114,59 @@
             return true
           }
         }
-          if (x === 0 || x === gameCanvas.width || y === 0 || y === gameCanvas.height) {
-            return true
-          } else {
-            return false
-          }
+        if (x === -10 || x === gameCanvas.width || y === -10 || y === gameCanvas.height) {
+          return true
+        } else {
+          return false
         }
-        createFood()
-        drawFood()
-        drawSnake()
+      }
 
-        document.addEventListener("keydown", handleKeyPress)
-        let addTail = false // if snake eats food, grow tail
+      const refreshGame = () => {
+        buttonClicked = true
+      }
 
-        function main() {
-          if (gameOver()) {
-            alert("Game Over")
-            return
-          }
-          if (ateFood()) {
-            addTail = true;
-            createFood()
-          }
-          setTimeout(onTick => { //wait .1 sec, make move, then call main again
-            clearCanvas()
-            drawFood()
-            moveSnake(addTail)
-            drawSnake()
-
-            main()
-          }, 100)
-
+      const waitForButton = () => {
+        if (!buttonClicked){
+          initializeSnake()
+          game()
+        } else {
+          setTimeout(waitForButton, 1000)
         }
-        main()
+      }
+
+      initializeSnake()
+      createFood()
+      drawFood()
+      drawSnake()
+
+
+      document.addEventListener("keydown", handleKeyPress)
+      let addTail = false // if snake eats food, grow tail
+      const gameOverDiv = document.getElementById("gameOver")
+
+      function game() {
+        if (gameOver()) {
+          gameOverDiv.style.display = "block"
+          // waitForButton()
+          // alert("Game Over")
+          return
+        }
+        if (ateFood()) {
+          addTail = true;
+          createFood()
+        }
+        setTimeout(onTick => { //wait .1 sec, make move, then call main again
+          clearCanvas()
+          drawFood()
+          moveSnake(addTail)
+          drawSnake()
+
+          game()
+        }, 100)
+
+      }
+
+      game()
 
     </script>
   </body>

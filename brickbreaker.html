@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>Brickbreaker</title>
+  </head>
+  <body>
+    <canvas id="gameCanvas" height="500px" width="400" > </canvas>
+      <script type="text/javascript">
+        const gameCanvas = document.getElementById("gameCanvas")
+        const context = gameCanvas.getContext("2d")
+
+        //Constants
+        const CANVAS_BORDER_COLOR = 'black';
+        const CANVAS_BACKGROUND_COLOR = "white";
+        const BALL_COLOR = 'red';
+        const BALL_BORDER_COLOR = 'black';
+        const BLOCK_COLOR = 'black';
+        const BLOCK_BORDER_COLOR = 'black';
+
+        const width = gameCanvas.width, height = gameCanvas.height, radius = 7
+        let x = gameCanvas.width/2, y = (gameCanvas.height - radius), dx=10, dy=-10
+        let blockArray = [];
+        for (let i=0; i < 10; i++){
+          blockArray.push([0, 0, 0, 0, 0, 0, 0, 0])
+        }
+
+        const newBlocks = () => { //create 2d array to track blocks
+          blockArray.unshift(blockArray[0].map(block => Math.random() > .6 ? 1 : 0))
+          blockArray.pop()
+        }
+
+        const drawBlocks = () => {
+          blockArray[0].forEach((block, index)=> {
+            if (block === 1) {
+              context.fillRect(width/8*index, height/10, width/8, height/10)
+              context.strokeRect(width/8*index, height/10, width/8, height/10)
+            }
+          })
+        }
+
+        const drawInitialBoard = () => {
+          context.fillStyle = CANVAS_BACKGROUND_COLOR; context.strokestyle = CANVAS_BORDER_COLOR;
+          context.fillRect(0, 0, width, height); //board itself
+          context.strokeRect(0, 0, width, height);
+          context.fillStyle = BALL_COLOR
+          context.arc(width/2,height - radius,7,0,Math.PI*2,true); //ball
+          context.fill()
+          drawBlocks()
+        }
+
+        const moveBall = () => {
+          // if (y > height - radius){
+          //   endLoop()
+          //   return
+          // }
+          if (x < radius || x > width - radius) { dx = -dx } //collision logic
+          if (y < radius || y > height - radius) { dy = -dy }
+          for (let i = 0; i<10; i++){ // yikes on this nested for loop. need to rework
+            for (let j = 0; j<8; j++){
+              if (blockArray[i][j] === 1){
+                const blockX = width/8*j; const blockY = height/10*(i+1)
+                const roundX = Math.round(x); roundY = Math.round(y)
+                console.log("x", blockX, "y", blockY)
+                if ((blockX <= x && x <= blockX + width/8) && (blockY <= y && y <= blockY + height/10)){
+                  dy = -dy
+                  }
+                }
+              }
+            }
+          x += dx; y += dy
+          context.clearRect(0, 0, width, height)
+          context.strokeRect(0, 0, width, height);
+          context.beginPath()
+          context.arc(x,y,radius,0,Math.PI*2,true);
+          context.closePath()
+          context.fill()
+          drawBlocks()
+        }
+
+        const buildUnitVector = (x0, y0, x1, y1) => { //todo
+          let netX = Math.abs(x0 - x1); let netY = Math.abs(height -  (y1 - y0))
+          let magnitude = Math.sqrt( Math.pow(netX, 2) + Math.pow(netY, 2))
+          return {unitX: netX/magnitude, unitY: netX/magnitude, mag: magnitude}
+        }
+
+        const handleMouseMove = event => {
+          const {clientX, clientY} = event
+          // const {unitX, unitY, mag} = buildUnitVector(x, y, clientX, clientY)
+          // const myMag = mag/100
+          context.clearRect(0, 0, width, height); drawInitialBoard()//maintain the initail board set up
+          context.beginPath()
+          context.moveTo(x, y)
+          context.lineTo(clientX, clientY)
+          context.stroke()
+          context.closePath()
+        }
+
+        const handleMouseClick = event => {
+          const {clientX, clientY} = event
+          dx = (clientX - x)/100; dy = (clientY - y)/100 ;
+          main()
+        }
+
+        const main = () => {
+          setInterval(moveBall, 1000)
+          console.log("next level")
+          main()
+        }
+
+
+        gameCanvas.addEventListener("mousemove", handleMouseMove)
+        gameCanvas.addEventListener("click", handleMouseClick)
+        newBlocks()
+        drawInitialBoard()
+        //main()
+      </script>
+  </body>
+</html>
