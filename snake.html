@@ -5,16 +5,17 @@
     <title> Snake </title>
   </head>
   <style>
-    #gameOver {
+    #gameOverHeader {
       display: none
     }
   </style>
   <body>
     <h1> Snake </h1>
+    <h2 id="scoreVal"> 0 </h2>
     <canvas id="gameCanvas" height="300px" width="300" > </canvas>
     <div id="gameOver" >
-      <h2> Game Over </h2>
-      <button onclick="refreshGame()"> Play Again </button>
+      <h2 id="gameOverHeader"> Game Over </h2>
+      <button onclick="newGame()"> Play Game </button>
     </div>
     <script type="text/javascript">
         const gameCanvas = document.getElementById("gameCanvas") //game canvas
@@ -33,7 +34,12 @@
         // Draw a "border" around the entire canvas
         ctx.strokeRect(0, 0, gameCanvas.width, gameCanvas.height);
 
+        const gameOverHeader = document.getElementById("gameOverHeader")
+        const gameOverDiv = document.getElementById("gameOver")
+        const scoreVal = document.getElementById("scoreVal")
+
         let snake = [];
+        let dx; let dy; let foodX; let foodY; let score;
 
         const initializeSnake = () => {
           snake = [
@@ -43,8 +49,10 @@
             {x: (gameCanvas.width - 60)/2, y: gameCanvas.height/2},
             {x: (gameCanvas.width - 80)/2, y: gameCanvas.height/2}
           ]
+          dx = 10, dy = 0; foodX = 0; foodY = 0; score=0
+          scoreVal.innerHTML = 0
         }
-        let dx = 10, dy = 0; foodX = 0; foodY = 0; buttonClicked = false//declare movement variables
+
 
         const drawSnakePart = snakePart => {
           ctx.fillStyle = SNAKE_COLOR;
@@ -121,38 +129,39 @@
         }
       }
 
-      const refreshGame = () => {
-        buttonClicked = true
+      const hideButton = () => {
+        gameOverDiv.style.display = "none"
       }
 
-      const waitForButton = () => {
-        if (!buttonClicked){
-          initializeSnake()
-          game()
-        } else {
-          setTimeout(waitForButton, 1000)
-        }
-      }
 
-      initializeSnake()
-      createFood()
-      drawFood()
-      drawSnake()
+      const addScore = () => {
+        score += 10
+        scoreVal.innerHTML = score
+      }
 
 
       document.addEventListener("keydown", handleKeyPress)
-      let addTail = false // if snake eats food, grow tail
-      const gameOverDiv = document.getElementById("gameOver")
 
-      function game() {
+      let addTail = false // if snake eats food, grow tail
+
+      const newGame = () => {
+        initializeSnake()
+        createFood()
+        drawFood()
+        drawSnake()
+        hideButton()
+        main()
+      }
+
+      function main() {
         if (gameOver()) {
           gameOverDiv.style.display = "block"
-          // waitForButton()
-          // alert("Game Over")
+          gameOverHeader.style.display = "block"
           return
         }
         if (ateFood()) {
           addTail = true;
+          addScore()
           createFood()
         }
         setTimeout(onTick => { //wait .1 sec, make move, then call main again
@@ -161,12 +170,10 @@
           moveSnake(addTail)
           drawSnake()
 
-          game()
+          main()
         }, 100)
 
       }
-
-      game()
 
     </script>
   </body>
