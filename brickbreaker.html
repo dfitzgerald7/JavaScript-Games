@@ -36,7 +36,6 @@
         const refreshXandY = () => {
           x = width/2
           y = (height - radius)
-          duringLevel = false
         }
 
         const newBlocks = () => { //create 2d array to track blocks
@@ -71,14 +70,14 @@
         }
 
         const blockAnimation = step => {
-          console.log("animate")
           if (step > 4) {
             newBlocks()
             drawInitialBoard()
+            duringLevel = false
             return
           }
-          clearBoard()
           setTimeout(function(){
+            clearBoard()
             blockArray.forEach((blockRow, vertical) => {
               blockRow.forEach((block, horizontal) => {
               for (let i=0; i<5; i++) {
