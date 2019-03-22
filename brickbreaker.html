@@ -22,7 +22,7 @@
         const CANVAS_BACKGROUND_COLOR = "white";
         const BALL_COLOR = 'red';
         const BALL_BORDER_COLOR = 'black';
-        const BLOCK_COLOR = 'black';
+        const BLOCK_COLOR = 'red';
         const BLOCK_BORDER_COLOR = 'black';
 
         const width = gameCanvas.width, height = gameCanvas.height, radius = 7
@@ -45,6 +45,7 @@
 
         //draws the entire block array by looping through. O(n2)
         const drawBlocks = () => {
+          // context.fillStyle = BLOCK_COLOR
           blockArray.forEach((blockRow, vertical) => {
             blockRow.forEach((block, horizontal) => {
             if (block === 1) {
@@ -105,10 +106,11 @@
                 const blockXLeft = width/8*j; const blockYTop = height/10*(i+1)
                 const blockXRight = width/8*j + width/8 ; const blockYBottom = height/10*(i+1) + height/10
                 const roundX = Math.round(x); roundY = Math.round(y)
-                if ((blockXLeft <= x && x <= blockXRight) && (blockYTop <= y && y <= blockYBottom)){
+                if (((blockXLeft <= x + 3 && x + 3 <= blockXRight) || (blockXLeft <= x - 3 && x - 3 <= blockXRight))
+                  && ((blockYTop <= y + 3 && y + 3 <= blockYBottom) || (blockYTop <= y - 3 && y - 3 <= blockYBottom))){
                   blockArray[i][j] = 0 // delete block that is detected as hit
                   //determine if a horizonal or vertical collision
-                  if (Math.abs(roundX - blockXLeft) < 5 || Math.abs(roundX - blockXRight) < 5) {
+                  if (Math.abs(roundX - blockXLeft) < 4 || Math.abs(roundX - blockXRight) < 4) {
                     dx = -dx //change direction
                   } else {
                     dy = -dy
