@@ -4,8 +4,15 @@
     <meta charset="utf-8">
     <title>Brickbreaker</title>
   </head>
+  <style>
+    #gameOver {
+      display: none
+    }
+  </style>
   <body>
+    <h2 id="score"> 0 </h2>
     <canvas id="gameCanvas" height="500px" width="400" > </canvas>
+    <h2 id="gameOver"> Game Over </h2>
       <script type="text/javascript">
         const gameCanvas = document.getElementById("gameCanvas")
         const context = gameCanvas.getContext("2d")
@@ -49,16 +56,41 @@
           })
         }
 
-
-
-        const drawInitialBoard = () => {
+        const clearBoard = () => {
           context.fillStyle = CANVAS_BACKGROUND_COLOR; context.strokestyle = CANVAS_BORDER_COLOR;
           context.fillRect(0, 0, width, height); //board itself
           context.strokeRect(0, 0, width, height);
           context.fillStyle = BALL_COLOR
           context.arc(width/2,height - radius,7,0,Math.PI*2,true); //ball
           context.fill()
+        }
+
+        const drawInitialBoard = () => {
+          clearBoard()
           drawBlocks()
+        }
+
+        const blockAnimation = step => {
+          console.log("animate")
+          if (step > 4) {
+            newBlocks()
+            drawInitialBoard()
+            return
+          }
+          clearBoard()
+          setTimeout(function(){
+            blockArray.forEach((blockRow, vertical) => {
+              blockRow.forEach((block, horizontal) => {
+              for (let i=0; i<5; i++) {
+                if (block === 1) {
+                  context.fillRect(width/8*horizontal, height/10*(vertical + 1) + height/50*step, width/8, height/10)
+                  context.strokeRect(width/8*horizontal, height/10*(vertical + 1) + height/50*step, width/8, height/10)
+                }
+              }
+              })
+            })
+            blockAnimation(step + 1)
+          }, 500)
         }
 
         const moveBall = () => {
@@ -76,7 +108,6 @@
                 const roundX = Math.round(x); roundY = Math.round(y)
                 if ((blockXLeft <= x && x <= blockXRight) && (blockYTop <= y && y <= blockYBottom)){
                   blockArray[i][j] = 0 // delete block that is detected as hit
-
                   //determine if a horizonal or vertical collision
                   if (Math.abs(roundX - blockXLeft) < 5 || Math.abs(roundX - blockXRight) < 5) {
                     dx = -dx //change direction
@@ -84,11 +115,6 @@
                     dy = -dy
                   }
                 }
-                // if ((blockX <= x && x <= blockX + width/8) && (blockY <= y && y <= blockY + height/10)){
-                //   blockArray[i][j] = 0 // delete block that is detected as hit
-                //   console.log(roundX, roundY, blockX, blockX+width/8, blockY, blockY + height/10)
-                //   dy = -dy //change direction
-                // }
                 }
               }
             }
@@ -105,7 +131,7 @@
 
         const nextLevel = () => {
           refreshXandY()
-          newBlocks()
+          blockAnimation(1)
         }
 
         const buildUnitVector = (x0, y0, x1, y1) => { //todo
