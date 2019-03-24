@@ -16,6 +16,8 @@
       <script type="text/javascript">
         const gameCanvas = document.getElementById("gameCanvas")
         const context = gameCanvas.getContext("2d")
+        const scoreDiv = document.getElementById("score")
+        const gameOverDiv = document.getElementById("gameOver")
 
         //Constants
         const CANVAS_BORDER_COLOR = 'black';
@@ -26,10 +28,10 @@
         const BLOCK_BORDER_COLOR = 'black';
 
         const width = gameCanvas.width, height = gameCanvas.height, radius = 7
-        let x = gameCanvas.width/2, y = (gameCanvas.height - radius), dx=10, dy=-10
+        let x = gameCanvas.width/2, y = (gameCanvas.height - radius), dx=10, dy=-10, score=0
         let duringLevel = false
         let blockArray = [];
-        for (let i=0; i < 10; i++){
+        for (let i=0; i < 9; i++){
           blockArray.push([0, 0, 0, 0, 0, 0, 0, 0])
         }
 
@@ -100,14 +102,15 @@
           }
           if (x < radius || x > width - radius) { dx = -dx } //collision logic
           if (y < radius || y > height - radius) { dy = -dy }
-          for (let i = 0; i<10; i++){ // yikes on this nested for loop. need to rework
+          for (let i = 0; i<9; i++){ // yikes on this nested for loop. need to rework
             for (let j = 0; j<8; j++){
               if (blockArray[i][j] === 1){
                 const blockXLeft = width/8*j; const blockYTop = height/10*(i+1)
                 const blockXRight = width/8*j + width/8 ; const blockYBottom = height/10*(i+1) + height/10
                 const roundX = Math.round(x); roundY = Math.round(y)
-                if (((blockXLeft <= x + 3 && x + 3 <= blockXRight) || (blockXLeft <= x - 3 && x - 3 <= blockXRight))
-                  && ((blockYTop <= y + 3 && y + 3 <= blockYBottom) || (blockYTop <= y - 3 && y - 3 <= blockYBottom))){
+                //checks if the 4 x and y points on the ball collided
+                if (((blockXLeft <= x + radius/2 && x + radius/2 <= blockXRight) || (blockXLeft <= x - radius/2 && x - radius/2 <= blockXRight))
+                  && ((blockYTop <= y + radius/2 && y + radius/2 <= blockYBottom) || (blockYTop <= y - radius/2 && y - radius/2 <= blockYBottom))){
                   blockArray[i][j] = 0 // delete block that is detected as hit
                   //determine if a horizonal or vertical collision
                   if (Math.abs(roundX - blockXLeft) < 4 || Math.abs(roundX - blockXRight) < 4) {
@@ -130,9 +133,19 @@
           main()
         }
 
+        const gameOver = () => {
+          return blockArray[8].join("") !== "00000000"
+        }
+
         const nextLevel = () => {
-          refreshXandY()
-          blockAnimation(1)
+          if (gameOver()) {
+            gameOverDiv.style.display = "block"
+            return
+          } else {
+            scoreDiv.innerHTML = score += 1
+            refreshXandY()
+            blockAnimation(1)
+          }
         }
 
         const buildUnitVector = (x0, y0, x1, y1) => { //todo
