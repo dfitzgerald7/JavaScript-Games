@@ -13,11 +13,13 @@
     <h2 id="score"> 0 </h2>
     <canvas id="gameCanvas" height="500px" width="400" > </canvas>
     <h2 id="gameOver"> Game Over </h2>
+    <button id="playGameButton" onclick="handleNewGameClick()" > Play </button>
       <script type="text/javascript">
         const gameCanvas = document.getElementById("gameCanvas")
         const context = gameCanvas.getContext("2d")
         const scoreDiv = document.getElementById("score")
         const gameOverDiv = document.getElementById("gameOver")
+        const playButton = document.getElementById("playGameButton")
 
         //Constants
         const CANVAS_BORDER_COLOR = 'black';
@@ -29,11 +31,16 @@
 
         const width = gameCanvas.width, height = gameCanvas.height, radius = 7
         let x = gameCanvas.width/2, y = (gameCanvas.height - radius), dx=10, dy=-10, score=0
-        let duringLevel = false
-        let blockArray = [];
-        for (let i=0; i < 9; i++){
-          blockArray.push([0, 0, 0, 0, 0, 0, 0, 0])
+        let canMakeMouseClick = false;
+        let blockArray;
+
+        const createNewBlockArray = () => {
+          blockArray = []
+          for (let i=0; i < 9; i++){
+            blockArray.push([0, 0, 0, 0, 0, 0, 0, 0])
+          }
         }
+
 
         const refreshXandY = () => {
           x = width/2
@@ -41,7 +48,7 @@
         }
 
         const newBlocks = () => { //create 2d array to track blocks
-          blockArray.unshift(blockArray[0].map(block => Math.random() > .6 ? 1 : 0))
+          blockArray.unshift(blockArray[0].map(block => Math.random() > .5 ? 1 : 0))
           blockArray.pop()
         }
 
@@ -72,11 +79,27 @@
           drawBlocks()
         }
 
+        const startNewGame = () => {
+          score = 0
+          scoreDiv.innerHTML = score
+          canMakeMouseClick = true
+          createNewBlockArray()
+          newBlocks()
+          drawInitialBoard()
+        }
+
         const blockAnimation = step => {
           if (step > 4) {
             newBlocks()
             drawInitialBoard()
-            duringLevel = false
+            if (!gameOver()){
+              scoreDiv.innerHTML = score += 1
+              canMakeMouseClick = true
+            } else {
+              playGameButton.style.display = "block"
+              canMakeMouseClick = false
+              gameOverDiv.style.display = "block"
+            }
             return
           }
           setTimeout(function(){
@@ -102,7 +125,7 @@
           }
           if (x < radius || x > width - radius) { dx = -dx } //collision logic
           if (y < radius || y > height - radius) { dy = -dy }
-          for (let i = 0; i<9; i++){ // yikes on this nested for loop. need to rework
+          for (let i = 0; i<8; i++){ // yikes on this nested for loop. need to rework
             for (let j = 0; j<8; j++){
               if (blockArray[i][j] === 1){
                 const blockXLeft = width/8*j; const blockYTop = height/10*(i+1)
@@ -138,14 +161,8 @@
         }
 
         const nextLevel = () => {
-          if (gameOver()) {
-            gameOverDiv.style.display = "block"
-            return
-          } else {
-            scoreDiv.innerHTML = score += 1
-            refreshXandY()
-            blockAnimation(1)
-          }
+          refreshXandY()
+          blockAnimation(1)
         }
 
         const buildUnitVector = (x0, y0, x1, y1) => { //todo
@@ -155,7 +172,7 @@
         }
 
         const handleMouseMove = event => {
-          if (!duringLevel) {
+          if (canMakeMouseClick) {
             const {clientX, clientY} = event
             context.clearRect(0, 0, width, height); drawInitialBoard()//maintain the initial board set up
             context.beginPath()
@@ -167,7 +184,7 @@
         }
 
         const handleMouseClick = event => {
-          if (!duringLevel) {
+          if (canMakeMouseClick) {
             const {clientX, clientY} = event
             const {unitX, unitY} = buildUnitVector(x, y, clientX, clientY)
             dx = unitX * 1.5; dy = unitY * 1.5;
@@ -175,15 +192,21 @@
           }
         }
 
+        const handleNewGameClick = event => {
+          gameOverDiv.style.display = "none"
+          playGameButton.style.display = "none"
+          startNewGame()
+        }
+
         const main = () => {
-          duringLevel = true
+          canMakeMouseClick = false
           setTimeout(moveBall, 1)
         }
 
         gameCanvas.addEventListener("mousemove", handleMouseMove)
         gameCanvas.addEventListener("click", handleMouseClick)
-        newBlocks()
-        drawInitialBoard()
+
+        clearBoard()
 
       </script>
   </body>
